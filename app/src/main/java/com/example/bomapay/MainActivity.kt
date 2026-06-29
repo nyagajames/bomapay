@@ -7,7 +7,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
-import com.example.bomapay.navigation.BomaPayNavGraph
+import androidx.navigation.compose.rememberNavController
+import com.example.bomapay.navigation.NavGraph
 import com.example.bomapay.ui.theme.BomapayTheme // <-- Changed to lowercase 'p'
 
 class MainActivity : ComponentActivity() {
@@ -16,10 +17,12 @@ class MainActivity : ComponentActivity() {
         setContent {
             BomapayTheme { // <-- Changed to lowercase 'p'
                 Surface(
-                    modifier = Modifier.fillMaxSize(),
+                    modifier =
+                        Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    BomaPayNavGraph()
+                    val navController = rememberNavController()
+                    NavGraph(navController = navController)
                 }
             }
         }

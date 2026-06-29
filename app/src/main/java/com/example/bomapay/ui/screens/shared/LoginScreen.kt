@@ -14,19 +14,21 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.navigation.NavHostController
 import com.example.bomapay.data.repository.AuthRepository
-import com.example.bomapay.navigation.Screen
 import kotlinx.coroutines.launch
 
 @Composable
-fun LoginScreen(navController: NavHostController) {
+fun LoginScreen(
+    onLoginSuccess: (String) -> Unit,
+    onNavigateToRegister: () -> Unit,
+    onNavigateToForgotPassword: () -> Unit
+) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
@@ -36,7 +38,6 @@ fun LoginScreen(navController: NavHostController) {
     val scope = rememberCoroutineScope()
     val authRepository = AuthRepository()
 
-    // Real-time calculation checking if the text matches a valid system email layout pattern
     val isEmailError = email.isNotEmpty() && !Patterns.EMAIL_ADDRESS.matcher(email).matches()
 
     Column(
@@ -51,11 +52,11 @@ fun LoginScreen(navController: NavHostController) {
 
         OutlinedTextField(
             value = email,
-            onValueChange = { email = it.trim() }, // Safely clips trailing accidental whitespace spaces
+            onValueChange = { email = it.trim() },
             label = { Text("Email Address") },
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(12.dp),
-            isError = isEmailError, // Toggles standard Material 3 red warning outline theme borders
+            isError = isEmailError,
             supportingText = {
                 if (isEmailError) {
                     Text("Please enter a valid email address", color = MaterialTheme.colorScheme.error)
@@ -89,7 +90,7 @@ fun LoginScreen(navController: NavHostController) {
                 text = "Forgot Password?",
                 color = MaterialTheme.colorScheme.primary,
                 fontWeight = FontWeight.Medium,
-                modifier = Modifier.clickable { navController.navigate(Screen.ForgotPassword.route) }
+                modifier = Modifier.clickable { onNavigateToForgotPassword() }
             )
         }
 
@@ -103,12 +104,10 @@ fun LoginScreen(navController: NavHostController) {
                         val result = authRepository.loginUser(email, password)
                         if (result.isSuccess) {
                             val uid = authRepository.getCurrentUid() ?: ""
-                            val role = authRepository.getUserRole(uid)
-                            if (role == "landlord") {
-                                navController.navigate(Screen.LandlordHome.route) { popUpTo(0) }
-                            } else {
-                                navController.navigate(Screen.TenantHome.route) { popUpTo(0) }
-                            }
+                            val role = authRepository.getUserRole(uid) ?: "tenant"
+
+                            // Let the NavGraph handle the destination calculation!
+                            onLoginSuccess(role)
                         } else {
                             isLoading = false
                             Toast.makeText(context, "Authentication Failed: ${result.exceptionOrNull()?.message}", Toast.LENGTH_LONG).show()
@@ -120,10 +119,9 @@ fun LoginScreen(navController: NavHostController) {
             },
             modifier = Modifier.fillMaxWidth().height(50.dp),
             shape = RoundedCornerShape(12.dp),
-            enabled = !isLoading // Disables user double-tapping buttons while network thread runs
+            enabled = !isLoading
         ) {
             if (isLoading) {
-                // Sleek layout pattern nested directly inside the button frame bounding layout limits
                 CircularProgressIndicator(
                     modifier = Modifier.size(24.dp),
                     color = MaterialTheme.colorScheme.onPrimary,
@@ -138,7 +136,7 @@ fun LoginScreen(navController: NavHostController) {
 
         Text(
             text = "Don't have an account? Sign Up",
-            modifier = Modifier.clickable { navController.navigate(Screen.Register.route) },
+            modifier = Modifier.clickable { onNavigateToRegister() },
             color = MaterialTheme.colorScheme.outline
         )
     }

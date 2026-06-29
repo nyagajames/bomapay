@@ -14,19 +14,20 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.navigation.NavHostController
 import com.example.bomapay.data.repository.AuthRepository
-import com.example.bomapay.navigation.Screen
 import kotlinx.coroutines.launch
 
 @Composable
-fun RegisterScreen(navController: NavHostController) {
+fun RegisterScreen(
+    onRegisterSuccess: () -> Unit,
+    onNavigateToLogin: () -> Unit
+) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var adminCode by remember { mutableStateOf("") } // Tracks the secret landlord verification token
@@ -92,7 +93,7 @@ fun RegisterScreen(navController: NavHostController) {
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Replaced the insecure public toggle switch with a protected text field input
+        // Protected text field input for admin role verification
         OutlinedTextField(
             value = adminCode,
             onValueChange = { adminCode = it },
@@ -101,7 +102,7 @@ fun RegisterScreen(navController: NavHostController) {
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(12.dp),
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-            visualTransformation = PasswordVisualTransformation() // Keeps the admin token masked
+            visualTransformation = PasswordVisualTransformation()
         )
 
         Spacer(modifier = Modifier.height(32.dp))
@@ -124,8 +125,8 @@ fun RegisterScreen(navController: NavHostController) {
                         val result = authRepository.registerUser(email, password, isLandlord = attemptsLandlordAccess)
                         isLoading = false
                         if (result.isSuccess) {
-                            val dest = if (attemptsLandlordAccess) Screen.LandlordHome.route else Screen.TenantHome.route
-                            navController.navigate(dest) { popUpTo(0) }
+                            // Tell the nav graph that registration succeeded
+                            onRegisterSuccess()
                         } else {
                             Toast.makeText(context, "Registration Failed: ${result.exceptionOrNull()?.message}", Toast.LENGTH_LONG).show()
                         }
@@ -153,7 +154,7 @@ fun RegisterScreen(navController: NavHostController) {
 
         Text(
             text = "Already have an account? Sign In",
-            modifier = Modifier.clickable { navController.navigate(Screen.Login.route) },
+            modifier = Modifier.clickable { onNavigateToLogin() },
             color = MaterialTheme.colorScheme.outline
         )
     }

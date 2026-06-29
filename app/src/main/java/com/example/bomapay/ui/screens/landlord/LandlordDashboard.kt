@@ -2,6 +2,8 @@ package com.example.bomapay.ui.screens.landlord
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AssignmentInd
+import androidx.compose.material.icons.filled.AssignmentLate
 import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -10,13 +12,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.navigation.NavHostController
-import com.example.bomapay.navigation.Screen
 import com.google.firebase.auth.FirebaseAuth
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun LandlordDashboard(navController: NavHostController) {
+fun LandlordDashboard(
+    onNavigateToAssign: () -> Unit,
+    onNavigateToIssueNotice: () -> Unit,
+    onLogout: () -> Unit
+) {
     Scaffold(
         topBar = {
             TopAppBar(
@@ -24,10 +28,10 @@ fun LandlordDashboard(navController: NavHostController) {
                 actions = {
                     IconButton(
                         onClick = {
+                            // 1. Clear out Firebase session
                             FirebaseAuth.getInstance().signOut()
-                            navController.navigate(Screen.Login.route) {
-                                popUpTo(navController.graph.startDestinationId) { inclusive = true }
-                            }
+                            // 2. Clear backstack via NavGraph implementation
+                            onLogout()
                         }
                     ) {
                         Icon(
@@ -49,10 +53,36 @@ fun LandlordDashboard(navController: NavHostController) {
                 .padding(paddingValues),
             contentAlignment = Alignment.Center
         ) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
                 Text("Landlord Portal", fontSize = 28.sp, fontWeight = FontWeight.Bold)
-                Spacer(modifier = Modifier.height(8.dp))
-                Text("Control Center Online", fontSize = 14.sp)
+                Text("Control Center Online", fontSize = 14.sp, color = MaterialTheme.colorScheme.outline)
+
+                Spacer(modifier = Modifier.height(32.dp))
+
+                // Feature Navigation: Assign Tenant to a House
+                Button(
+                    onClick = onNavigateToAssign,
+                    modifier = Modifier.fillMaxWidth(0.7f).height(50.dp)
+                ) {
+                    Icon(imageVector = Icons.Default.AssignmentInd, contentDescription = null)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Assign Tenant House", fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Feature Navigation: Issue Notice
+                OutlinedButton(
+                    onClick = onNavigateToIssueNotice,
+                    modifier = Modifier.fillMaxWidth(0.7f).height(50.dp)
+                ) {
+                    Icon(imageVector = Icons.Default.AssignmentLate, contentDescription = null)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Issue Notice", fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
+                }
             }
         }
     }
